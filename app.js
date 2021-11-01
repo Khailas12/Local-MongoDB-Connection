@@ -1,36 +1,59 @@
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb');
 const url = 'mongodb://localhost:27017';
 
 const mongoOptions = {
-    useNewUrlParser : true,
-    useUnifiedTopology : true,
+    useNewUrlParser: true, 
+    useUnifiedTopology: true
 }
 
-MongoClient.connect(url, mongoOptions, 
+MongoClient.connect(url, mongoOptions,
     (err, client) => {
-    if (err) {
-        return console.log(err);
-    }
+        if (err) {
+            return console.log(err);
+        }
+        
+        console.log(`DB connected: ${url}`);
+        const db = client.db('Register');   // to select a mongodb db
 
-    // specifying a db to access
-    const db = client.db('MyDb');
-    console.log(`DB connected: ${url}`);
-});
+        const names = db.collection('names');   // create and get collection
+        
+        // insert into an existing document
+        names.insertOne({ name: 'Bruce Wayne' }, (err, result) => {});  
+        
+        // inserts multiple docs at once
+        names.insertMany([
+            { name: 'Thomas Wayne'},
+            { name: 'Alfred Pennyworth' },
+            { name: 'Martha Wayne' }
+        ], (err, results) => {});
+        
+        // to find all docs
+        names.find().toArray((err, results) => {
+            console.log(names);
+        });   
+        
+        // to find a specific doc
+        names.find({ name: 'Bruce Wayne '}).toArray((err, result) => {
+            console.log(result);
+        });
 
+        // gets the topmost doc matches the filter
+        names.findOne({ name: 'Bruce Wayne' }, (err, result) => {
+            console.log(result);
+        });
 
-const names = db.collection('names');
+        // updating an existing doc
+        names.updateOne({ name : 'Thomas Wayne' }, {
+            $set: { name: 'Jim Gordon' },
+        }, (err, result) => {
+            console.log(result);
+        });
 
-names.insertOne({ name: 'Bruce Wayne' }, (err, result) => {});      // to insert a document into as existing collection
+        // del doc
+        names.deleteOne({ name: 'Jim Gordon' }, (err, result) => {
+            console.log(result);
+        });
 
-// to insert multiple docs at once
-names.insertMany([
-    { name : 'Bruce Wayne'},
-    { name: 'Thomas Wayne' },
-    { name: 'Martha Wayne'}
-], (err, results) => {});
-
-// find all docs
-names.find().toArray((err, results) => {
-    console.log(results);
-})
+        client.close()      // closing connection
+});        
 
